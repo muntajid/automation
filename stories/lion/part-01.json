@@ -1,0 +1,28 @@
+{
+  "series": "lion",
+  "episode": 1,
+  "title": "উল্টো কাঁটা",
+  "language": "bn",
+  "aspect": "9:16",
+  "hook": {
+    "seconds": 2,
+    "text": "ঘণ্টা বাজালেই শহর পিছিয়ে যায়! আজ ভোরে আমি এটাই করে ফেলেছি।"
+  },
+  "recap": null,
+  "scenes": [
+    {"id": 1, "seconds": 2, "narration_bn": "ঘণ্টা বাজালেই শহর পিছিয়ে যায়! আজ ভোরে আমি এটাই করে ফেলেছি।", "image_prompt": "Vertical 9:16 illustration. Lion: golden-amber fur, dark bronze mane with three swept-back curls, notched left ear, deep blue scarf with a small brass clock pin. Inside a clock tower, looking down in alarm, clock hands spinning backward, warm dawn light through windows, storybook style."},
+    {"id": 2, "seconds": 6, "narration_bn": "নীলঘাটের ঘণ্টাঘরে প্রতি ভোরে আমি ঘণ্টা বাজাই। শহরের নিয়ম: ঘণ্টার শব্দে দেওয়া কথা রাখতেই হয়।", "image_prompt": "Same Lion character (scarf, notched ear, mane curls). Ringing a big bronze bell at dawn, small river town below with rooftops and a river, soft morning colours, storybook style."},
+    {"id": 3, "seconds": 8, "narration_bn": "আজ ঘণ্টা বাজতেই কাঁটা উল্টো ঘুরল। মোরগ-ঘড়ি ডেকে উঠল ভুল সময়ে।", "image_prompt": "Same Lion character. Clock face with hands reversed, a brass rooster clock crowing with confused expression, Lion stepping back, storybook style."},
+    {"id": 4, "seconds": 8, "narration_bn": "মাটির সিঁড়িতে পড়ে আছে একটা ছোট পিতলের চাবি। তার গায়ে খোদাই: ফিরে যাও না, এগিয়ে যাও।", "image_prompt": "Close-up of a small brass key on old stone steps, faint engraved words visible on the key, morning light, shallow depth of field, storybook style. No character."},
+    {"id": 5, "seconds": 8, "narration_bn": "চাবিটা নিয়ে আমি ছুটলাম বুড়ো দিদার ঘড়ি-মেরামতির দোকানে।", "image_prompt": "Same Lion character holding the brass key on a red string. Inside an old tortoise's clock-repair workshop with many gears and clocks, elderly tortoise with round spectacles in background, storybook style."},
+    {"id": 6, "seconds": 8, "narration_bn": "দিদা বলল, এই চাবি চল্লিশ বছর আগে খুলে ফেলা একটা চাকার। চাকাটা কে খুলেছিল, দিদা বলল না।", "image_prompt": "Elderly tortoise examining a brass key next to an old detached gear on a workbench, Lion watching closely, warm workshop light, storybook style."},
+    {"id": 7, "seconds": 8, "narration_bn": "চাবিটা অর্ধেক ঘুরতেই ভেতর থেকে কেউ ফিসফিস করে বলল: ঘণ্টাটা আবার বাজিও না। পরের পর্বে জানা যাবে কে কথা বলল।", "image_prompt": "Lion in a dim clock tower, key half-turned in a small hidden keyhole on a gear, a faint glowing silhouette of a tiny clock spirit inside the gear, mysterious blue light, storybook style."}
+  ],
+  "cliffhanger": {
+    "text": "ভেতর থেকে কেউ ফিসফিস করে বলল: ঘণ্টাটা আবার বাজিও না। পরের পর্বে জানা যাবে কে কথা বলল।"
+  },
+  "continuity": {
+    "character_marks": ["notched left ear", "three swept-back mane curls", "deep blue scarf", "brass clock pin"],
+    "props": ["brass key on red string"]
+  }
+}
