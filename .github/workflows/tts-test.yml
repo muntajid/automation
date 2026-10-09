@@ -1,0 +1,47 @@
+name: tts-test
+
+# Manual-only. Single-scene Bangla TTS test. Costs free-tier quota only.
+# Dry run unless confirm == 'yes'. Needs repository secret GEMINI_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      scene:
+        description: "Scene number from stories/lion/part-01.json"
+        required: true
+        default: "1"
+      confirm:
+        description: "Type yes to make ONE real Gemini TTS call"
+        required: true
+        default: "no"
+
+permissions:
+  contents: read
+
+jobs:
+  tts-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dry run plan (always)
+        env:
+          SCENE: ${{ inputs.scene }}
+        run: python3 scripts/tts_test.py --scene "$SCENE"
+      - name: Real call (only when confirm = yes)
+        if: inputs.confirm == 'yes'
+        env:
+          SCENE: ${{ inputs.scene }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CONFIRM_TTS: "yes"
+        run: python3 scripts/tts_test.py --scene "$SCENE" --execute
+      - name: Upload audio (7 days)
+        if: inputs.confirm == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-tts-test
+          path: out/*.wav
+          retention-days: 7
+          if-no-files-found: warn
