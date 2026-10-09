@@ -1,13 +1,20 @@
 name: tts-test
 
-# Manual-only. Single-scene Bangla TTS test. Costs free-tier quota only.
+# Manual-only Bangla TTS. Costs free-tier quota only.
 # Dry run unless confirm == 'yes'. Needs repository secret GEMINI_API_KEY.
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "all = whole episode in one call (consistent voice); scene = one scene"
+        type: choice
+        options:
+          - all
+          - scene
+        default: "all"
       scene:
-        description: "Scene number from stories/lion/part-01.json"
-        required: true
+        description: "Scene number (used only when mode = scene)"
+        required: false
         default: "1"
       confirm:
         description: "Type yes to make ONE real Gemini TTS call"
@@ -28,20 +35,26 @@ jobs:
           python-version: "3.12"
       - name: Dry run plan (always)
         env:
+          MODE: ${{ inputs.mode }}
           SCENE: ${{ inputs.scene }}
-        run: python3 scripts/tts_test.py --scene "$SCENE"
+        run: |
+          if [ "$MODE" = "all" ]; then ARGS=(--all); else ARGS=(--scene "$SCENE"); fi
+          python3 scripts/tts_test.py "${ARGS[@]}"
       - name: Real call (only when confirm = yes)
         if: inputs.confirm == 'yes'
         env:
+          MODE: ${{ inputs.mode }}
           SCENE: ${{ inputs.scene }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           CONFIRM_TTS: "yes"
-        run: python3 scripts/tts_test.py --scene "$SCENE" --execute
+        run: |
+          if [ "$MODE" = "all" ]; then ARGS=(--all); else ARGS=(--scene "$SCENE"); fi
+          python3 scripts/tts_test.py "${ARGS[@]}" --execute
       - name: Upload audio (7 days)
         if: inputs.confirm == 'yes'
         uses: actions/upload-artifact@v4
         with:
-          name: lion-tts-test
+          name: lion-tts-full
           path: out/*.wav
           retention-days: 7
           if-no-files-found: warn
