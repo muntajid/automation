@@ -16,6 +16,10 @@ on:
         description: "Scene number (used only when mode = scene)"
         required: false
         default: "1"
+      voice:
+        description: "Gemini prebuilt voice name, e.g. Charon, Fenrir, Orus, Puck, Kore"
+        required: true
+        default: "Charon"
       confirm:
         description: "Type yes to make ONE real Gemini TTS call"
         required: true
@@ -37,24 +41,26 @@ jobs:
         env:
           MODE: ${{ inputs.mode }}
           SCENE: ${{ inputs.scene }}
+          VOICE: ${{ inputs.voice }}
         run: |
           if [ "$MODE" = "all" ]; then ARGS=(--all); else ARGS=(--scene "$SCENE"); fi
-          python3 scripts/tts_test.py "${ARGS[@]}"
+          python3 scripts/tts_test.py "${ARGS[@]}" --voice "$VOICE"
       - name: Real call (only when confirm = yes)
         if: inputs.confirm == 'yes'
         env:
           MODE: ${{ inputs.mode }}
           SCENE: ${{ inputs.scene }}
+          VOICE: ${{ inputs.voice }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           CONFIRM_TTS: "yes"
         run: |
           if [ "$MODE" = "all" ]; then ARGS=(--all); else ARGS=(--scene "$SCENE"); fi
-          python3 scripts/tts_test.py "${ARGS[@]}" --execute
+          python3 scripts/tts_test.py "${ARGS[@]}" --voice "$VOICE" --execute
       - name: Upload audio (7 days)
         if: inputs.confirm == 'yes'
         uses: actions/upload-artifact@v4
         with:
-          name: lion-tts-full
+          name: lion-tts-${{ inputs.voice }}
           path: out/*.wav
           retention-days: 7
           if-no-files-found: warn
