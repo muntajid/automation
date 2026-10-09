@@ -37,3 +37,12 @@ Phase 2-এ YouTube-এর জন্য আলাদা OAuth client secrets ল
 ## 5. Public repo সতর্কতা
 
 এই repository public। কোনো `.env`, key, token, বা generated MP4 commit করবেন না। `.gitignore` এগুলো ignore করে, তবুও commit-এর আগে `git status` দেখুন।
+
+## 6. Workflow file যুক্ত করার ধাপ (manual)
+
+এই session-এর GitHub App `.github/workflows/` পরিবর্তনের permission পায়নি, তাই `dry-run.yml` এখানে `docs/manual-install/dry-run.yml`-এ রাখা আছে। আপনি নিজে GitHub-এ বা local-এ সরিয়ে নিতে পারেন:
+
+```bash
+mkdir -p .github/workflows && git mv docs/manual-install/dry-run.yml .github/workflows/dry-run.yml && git commit -m "Add dry-run workflow" && git push
+```
+(অথবা GitHub web UI-তে `.github/workflows/dry-run.yml` নামে ফাইল তৈরি করে ভেতরের content কপি করুন।)

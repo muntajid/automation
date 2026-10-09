@@ -7,7 +7,7 @@
 - `stories/lion/` — Character Bible, ৮-part arc, Part 1 (Hook, script, scene prompts, JSON)
 - `scripts/pipeline.py` — episode validate + quota plan (কোনো network call নেই)
 - `tests/` — unit tests
-- `.github/workflows/dry-run.yml` — manual dry-run (কোনো secret লাগে না)
+- `docs/manual-install/dry-run.yml` — manual dry-run workflow (GitHub App-এর `workflows` permission না থাকায় এটি `.github/workflows/`-এ যুক্ত হয়নি; নিচের নির্দেশ দেখুন)
 - `docs/architecture.md` — service যাচাই, API count, quota guardrails
 - `docs/setup.md` — secret names ও ফোন থেকে review-এর ধাপ
 
