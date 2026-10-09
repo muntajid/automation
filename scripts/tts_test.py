@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Bangla TTS for the Lion series. One scene per call.
+"""Bangla TTS for the Lion series.
+
+--scene N : one scene per call.
+--all     : whole episode in ONE call (keeps the voice consistent).
 
 Default: DRY RUN, no network call.
 Real call only with --execute AND CONFIRM_TTS=yes AND GEMINI_API_KEY set.
@@ -19,12 +22,8 @@ DEFAULT_VOICE = "Kore"
 MAX_CHARS_PER_CALL = 1500
 
 
-def load_scene(episode_path, scene_id):
-    ep = json.loads(Path(episode_path).read_text(encoding="utf-8"))
-    for scene in ep["scenes"]:
-        if scene["id"] == scene_id:
-            return scene
-    raise SystemExit(f"scene {scene_id} not found in {episode_path}")
+def load_episode(episode_path):
+    return json.loads(Path(episode_path).read_text(encoding="utf-8"))
 
 
 def build_body(text, voice, style):
@@ -82,19 +81,31 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--episode", default=str(ROOT / "stories/lion/part-01.json"))
     p.add_argument("--scene", type=int, default=1)
+    p.add_argument("--all", action="store_true")
     p.add_argument("--voice", default=DEFAULT_VOICE)
     p.add_argument("--style", default="calm, slightly urgent, storytelling")
     p.add_argument("--execute", action="store_true")
     args = p.parse_args(argv)
 
-    scene = load_scene(args.episode, args.scene)
-    text = scene["narration_bn"]
+    ep = load_episode(args.episode)
+    if args.all:
+        text = " ".join(s["narration_bn"] for s in ep["scenes"])
+        label = "all"
+    else:
+        matches = [s for s in ep["scenes"] if s["id"] == args.scene]
+        if not matches:
+            print(json.dumps({"error": f"scene {args.scene} not found"}, ensure_ascii=False))
+            return 1
+        text = matches[0]["narration_bn"]
+        label = f"s{args.scene:02d}"
+
     if len(text) > MAX_CHARS_PER_CALL:
-        print(json.dumps({"error": "text too long for one call"}, ensure_ascii=False))
+        print(json.dumps({"error": "text too long for one call", "chars": len(text)},
+                         ensure_ascii=False))
         return 1
 
-    out = Path(f"out/lion-p01-s{args.scene:02d}.wav")
-    plan = {"model": MODEL, "scene": args.scene, "chars": len(text),
+    out = Path(f"out/lion-p01-{label}.wav")
+    plan = {"model": MODEL, "part": label, "chars": len(text),
             "voice": args.voice, "output": str(out), "network_calls": 0, "mode": "dry-run"}
 
     if not args.execute:
