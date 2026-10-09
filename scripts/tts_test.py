@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """Single-scene Bangla TTS test for the Lion series.
 
-Default: DRY RUN. Prints the request plan and makes NO network call.
-Real call only when BOTH --execute is passed AND env CONFIRM_TTS=yes is set,
-and GEMINI_API_KEY is present in the environment (GitHub Actions Secret).
-
-Model: gemini-3.8-flash-tts (free tier per Google pricing page, checked 2026-10-10).
-Bangla is listed in the speech-generation supported languages.
+Default: DRY RUN, no network call.
+Real call only with --execute AND CONFIRM_TTS=yes AND GEMINI_API_KEY set.
 """
 import argparse
 import base64
@@ -19,11 +15,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MODEL = "gemini-3.8-flash-tts"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
-DEFAULT_VOICE = "Kore"          # prebuilt docs example; Bangla voice still to be chosen by listening
-MAX_CHARS_PER_CALL = 1500       # per-call limit in the tool contract used for this project
+DEFAULT_VOICE = "Kore"
+MAX_CHARS_PER_CALL = 1500
 
 
-def load_scene(episode_path: str, scene_id: int) -> dict:
+def load_scene(episode_path, scene_id):
     ep = json.loads(Path(episode_path).read_text(encoding="utf-8"))
     for scene in ep["scenes"]:
         if scene["id"] == scene_id:
@@ -31,7 +27,7 @@ def load_scene(episode_path: str, scene_id: int) -> dict:
     raise SystemExit(f"scene {scene_id} not found in {episode_path}")
 
 
-def build_body(text: str, voice: str, style: str) -> dict:
+def build_body(text, voice, style):
     return {
         "model": MODEL,
         "input": [{
@@ -47,7 +43,42 @@ def build_body(text: str, voice: str, style: str) -> dict:
     }
 
 
-def main(argv=None) -> int:
+def find_audio(obj):
+    """Search the whole response for base64 audio, wherever it sits."""
+    if isinstance(obj, dict):
+        data = obj.get("data")
+        if isinstance(data, str) and (obj.get("type") == "audio"
+                                      or "audio" in str(obj.get("mime_type", ""))):
+            return data
+        oa = obj.get("output_audio")
+        if isinstance(oa, dict) and isinstance(oa.get("data"), str):
+            return oa["data"]
+        for v in obj.values():
+            found = find_audio(v)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for v in obj:
+            found = find_audio(v)
+            if found:
+                return found
+    return None
+
+
+def shape(obj, depth=0):
+    """Structure only: keys and types. Long strings (audio) are never printed."""
+    if depth > 5:
+        return "..."
+    if isinstance(obj, dict):
+        return {k: shape(v, depth + 1) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [shape(obj[0], depth + 1)] if obj else []
+    if isinstance(obj, str):
+        return f"str(len={len(obj)})"
+    return type(obj).__name__
+
+
+def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--episode", default=str(ROOT / "stories/lion/part-01.json"))
     p.add_argument("--scene", type=int, default=1)
@@ -63,15 +94,8 @@ def main(argv=None) -> int:
         print(json.dumps({"error": "text too long for one call"}, ensure_ascii=False))
         return 1
 
-    plan = {
-        "model": MODEL,
-        "scene": args.scene,
-        "chars": len(text),
-        "voice": args.voice,
-        "output": args.out,
-        "network_calls": 0,
-        "mode": "dry-run",
-    }
+    plan = {"model": MODEL, "scene": args.scene, "chars": len(text),
+            "voice": args.voice, "output": args.out, "network_calls": 0, "mode": "dry-run"}
 
     if not args.execute:
         print(json.dumps(plan, ensure_ascii=False, indent=2))
@@ -90,19 +114,22 @@ def main(argv=None) -> int:
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        # Quota/rate-limit: stop cleanly, no fallback.
         print(json.dumps({**plan, "mode": "execute", "http_status": e.code,
                           "stop": "clean stop; no paid fallback"}, ensure_ascii=False, indent=2))
         return 2
 
-    audio_b64 = (data.get("output_audio") or {}).get("data")
+    audio_b64 = find_audio(data)
     if not audio_b64:
-        print(json.dumps({**plan, "mode": "execute", "error": "no audio in response"}, ensure_ascii=False))
+        # Print structure only, so the next run shows where audio really is.
+        print(json.dumps({**plan, "mode": "execute", "error": "no audio found",
+                          "response_shape": shape(data)}, ensure_ascii=False, indent=2))
         return 3
+
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(base64.b64decode(audio_b64))
-    print(json.dumps({**plan, "mode": "execute", "bytes": out.stat().st_size}, ensure_ascii=False, indent=2))
+    print(json.dumps({**plan, "mode": "execute", "bytes": out.stat().st_size},
+                     ensure_ascii=False, indent=2))
     return 0
 
 
