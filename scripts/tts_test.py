@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single-scene Bangla TTS test for the Lion series.
+"""Bangla TTS for the Lion series. One scene per call.
 
 Default: DRY RUN, no network call.
 Real call only with --execute AND CONFIRM_TTS=yes AND GEMINI_API_KEY set.
@@ -84,7 +84,6 @@ def main(argv=None):
     p.add_argument("--scene", type=int, default=1)
     p.add_argument("--voice", default=DEFAULT_VOICE)
     p.add_argument("--style", default="calm, slightly urgent, storytelling")
-    p.add_argument("--out", default="out/lion-p01-s01.wav")
     p.add_argument("--execute", action="store_true")
     args = p.parse_args(argv)
 
@@ -94,8 +93,9 @@ def main(argv=None):
         print(json.dumps({"error": "text too long for one call"}, ensure_ascii=False))
         return 1
 
+    out = Path(f"out/lion-p01-s{args.scene:02d}.wav")
     plan = {"model": MODEL, "scene": args.scene, "chars": len(text),
-            "voice": args.voice, "output": args.out, "network_calls": 0, "mode": "dry-run"}
+            "voice": args.voice, "output": str(out), "network_calls": 0, "mode": "dry-run"}
 
     if not args.execute:
         print(json.dumps(plan, ensure_ascii=False, indent=2))
@@ -120,12 +120,10 @@ def main(argv=None):
 
     audio_b64 = find_audio(data)
     if not audio_b64:
-        # Print structure only, so the next run shows where audio really is.
         print(json.dumps({**plan, "mode": "execute", "error": "no audio found",
                           "response_shape": shape(data)}, ensure_ascii=False, indent=2))
         return 3
 
-    out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(base64.b64decode(audio_b64))
     print(json.dumps({**plan, "mode": "execute", "bytes": out.stat().st_size},
