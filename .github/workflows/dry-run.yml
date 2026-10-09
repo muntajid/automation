@@ -1,1 +1,29 @@
+name: dry-run
 
+# Phase 0: no secrets, no paid API, no upload. Only tests + episode validation/plan.
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: "Episode JSON path"
+        required: false
+        default: "stories/lion/part-01.json"
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate and plan (no network calls)
+        env:
+          EPISODE: ${{ inputs.episode }}
+        run: python3 scripts/pipeline.py plan --episode "$EPISODE"
